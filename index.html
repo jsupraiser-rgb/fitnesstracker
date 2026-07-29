@@ -142,28 +142,46 @@
         }
         .history-item {
             background-color: #064032;
-            padding: 12px;
+            padding: 12px 14px;
             border-radius: 10px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid var(--border-color);
-            font-size: 0.85rem;
+            gap: 12px;
         }
-        .history-item span {
-            color: #cbd5e1;
-            font-size: 0.75rem;
+        .history-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .history-info strong {
             display: block;
+            font-size: 0.95rem;
+            color: #ffffff;
+            margin-bottom: 2px;
         }
-        .del-btn {
+        .history-info span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .del-btn-round {
             background-color: #ef4444;
             color: #fff;
             border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: bold;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
         }
     </style>
 </head>
@@ -243,7 +261,7 @@
             
             let m = cm / 100;
             bmi = kg / (m * m);
-            details = `${kg} kg, ${cm} cm`;
+            details = `Weight: ${kg} kg, Height: ${cm} cm`;
         } else {
             let ft = parseFloat(document.getElementById('heightFt').value) || 0;
             let inches = parseFloat(document.getElementById('heightIn').value) || 0;
@@ -253,7 +271,7 @@
             if (!totalInches || !lbs || totalInches <= 0 || lbs <= 0) return alert('Please enter valid measurements.');
 
             bmi = (lbs / (totalInches * totalInches)) * 703;
-            details = `${lbs} lbs, ${ft}'${inches}"`;
+            details = `Weight: ${lbs} lbs, Height: ${ft}'${inches}"`;
         }
 
         bmi = Math.round(bmi * 10) / 10;
@@ -298,11 +316,11 @@
         history.forEach((h, idx) => {
             html += `
                 <div class="history-item">
-                    <div>
-                        <strong>BMI ${h.bmi} (${h.category})</strong>
+                    <div class="history-info">
+                        <strong>BMI ${h.bmi} - ${h.category}</strong>
                         <span>${h.details} &bull; ${h.date}</span>
                     </div>
-                    <button class="del-btn" onclick="deleteHistory(${idx})">Del</button>
+                    <button class="del-btn-round" onclick="deleteHistory(${idx})" title="Delete">&times;</button>
                 </div>`;
         });
         listEl.innerHTML = html;
