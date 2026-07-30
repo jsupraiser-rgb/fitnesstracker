@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthPulse Pro - AI Nutrition & Settings</title>
+    <title>HealthPulse Pro - Advanced AI Nutrition & Settings</title>
     <style>
         :root {
             --bg-color: #095c47;
@@ -52,15 +52,18 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             overflow: hidden;
+            margin-bottom: 12px;
         }
         .unit-btn {
             background: none;
             border: none;
             color: #cbd5e1;
             padding: 6px 10px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: bold;
             cursor: pointer;
+            flex: 1;
+            text-align: center;
         }
         .unit-btn.active {
             background-color: var(--accent-gold);
@@ -346,7 +349,6 @@
             background-color: var(--accent-gold);
             color: #064032;
         }
-        /* Modal Overlay Styling */
         .modal {
             display: none;
             position: fixed;
@@ -390,12 +392,8 @@
     <div class="top-header">
         <h1 id="appTitle">HealthPulse Pro</h1>
         <div class="header-controls">
+            <button class="icon-btn" onclick="openLanguageModal()" title="Language">🌐</button>
             <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
-            <button class="icon-btn" onclick="resetAppData()" title="Reset Data" style="color:#ff6b6b;">🔄</button>
-            <div class="unit-toggle" id="unitToggleContainer">
-                <button id="metricBtn" class="unit-btn active" onclick="setUnit('metric')">Metric</button>
-                <button id="imperialBtn" class="unit-btn" onclick="setUnit('imperial')">Imperial</button>
-            </div>
         </div>
     </div>
 
@@ -412,6 +410,11 @@
     <div id="paneBmi" class="tab-pane active">
         <div class="box">
             <form id="bmiForm" onsubmit="calculateBMI(event)">
+                <div class="unit-toggle" id="unitToggleContainer">
+                    <button type="button" id="metricBtn" class="unit-btn active" onclick="setUnit('metric')">Metric</button>
+                    <button type="button" id="imperialBtn" class="unit-btn" onclick="setUnit('imperial')">Imperial</button>
+                </div>
+
                 <div class="row-inputs">
                     <div style="flex:1;">
                         <label id="lblAge">Age</label>
@@ -536,7 +539,7 @@
         <div id="foodList"></div>
     </div>
 
-    <!-- TAB 4: ADVANCED AI SCANNERS -->
+    <!-- TAB 4: ADVANCED AI SCANNERS (Allows both camera capture & file upload) -->
     <div id="tabPaneAi" class="tab-pane">
         <div class="box">
             <div class="sub-tab-bar">
@@ -547,10 +550,13 @@
             <!-- Sub Section A: AI Food Scanner -->
             <div id="subPaneFood">
                 <div class="section-title" style="font-size:1rem; margin-bottom:4px;">AI Food & Meal Scanner</div>
-                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Snap or upload a meal photo to let AI detect macros and calories instantly.</p>
+                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Take a live photo or upload an image from your device to let AI detect macros and calories.</p>
                 
-                <input type="file" id="foodImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFoodImageUpload(event)">
-                <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📸 Snap Meal Photo</button>
+                <input type="file" id="foodImageInput" accept="image/*" style="display:none;" onchange="handleFoodImageUpload(event)">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button class="action-btn" style="margin-bottom:0;" onclick="document.getElementById('foodImageInput').removeAttribute('capture'); document.getElementById('foodImageInput').click()">📁 Upload Image</button>
+                    <button class="action-btn" style="margin-bottom:0; background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff;" onclick="let fi=document.getElementById('foodImageInput'); fi.setAttribute('capture','environment'); fi.click()">📸 Snap Live Photo</button>
+                </div>
                 
                 <img id="imagePreview" class="camera-preview" alt="Food Preview">
                 
@@ -574,10 +580,13 @@
             <!-- Sub Section B: Nutrition Label Scanner -->
             <div id="subPaneLabel" style="display: none;">
                 <div class="section-title" style="font-size:1rem; margin-bottom:4px;">Nutrition Label Scanner</div>
-                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Take a picture of any packaged product's nutrition label to extract metrics automatically.</p>
+                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Upload an image or take a picture of a packaged product's label to extract metrics.</p>
                 
-                <input type="file" id="labelImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleLabelImageUpload(event)">
-                <button class="action-btn" style="margin-bottom:10px; background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff;" onclick="document.getElementById('labelImageInput').click()">🏷️ Scan Nutrition Label</button>
+                <input type="file" id="labelImageInput" accept="image/*" style="display:none;" onchange="handleLabelImageUpload(event)">
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button class="action-btn" style="margin-bottom:0;" onclick="let li=document.getElementById('labelImageInput'); li.removeAttribute('capture'); li.click()">📁 Upload Label</button>
+                    <button class="action-btn" style="margin-bottom:0; background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff;" onclick="let li=document.getElementById('labelImageInput'); li.setAttribute('capture','environment'); li.click()">🏷️ Snap Label Photo</button>
+                </div>
                 
                 <img id="labelImagePreview" class="camera-preview" alt="Label Preview">
 
@@ -618,24 +627,53 @@
     </div>
 </div>
 
-<!-- SETTINGS / LANGUAGE MODAL -->
-<div id="settingsModal" class="modal">
+<!-- LANGUAGE MODAL -->
+<div id="languageModal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="margin:0; color:var(--accent-gold);" id="modalLangTitle">Language & Preferences</h3>
-            <span onclick="closeSettingsModal()" style="font-size:1.5rem; cursor:pointer; color:#fff;">&times;</span>
+            <h3 style="margin:0; color:var(--accent-gold);" id="modalLangTitle">Language</h3>
+            <span onclick="closeLanguageModal()" style="font-size:1.5rem; cursor:pointer; color:#fff;">&times;</span>
         </div>
         <p style="font-size:0.8rem; color:#cbd5e1; margin-bottom:12px;" id="modalLangDesc">Select your preferred major language:</p>
         
         <div id="languageListContainer"></div>
         
-        <button class="action-btn" onclick="closeSettingsModal()" style="margin-top:12px;" id="btnSavePrefs">Save & Close</button>
+        <button class="action-btn" onclick="closeLanguageModal()" style="margin-top:12px;" id="btnSaveLang">Save & Close</button>
+    </div>
+</div>
+
+<!-- SETTINGS PREFERENCES & GOALS MODAL -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; color:var(--accent-gold);">Settings & Preferences</h3>
+            <span onclick="closeSettingsModal()" style="font-size:1.5rem; cursor:pointer; color:#fff;">&times;</span>
+        </div>
+
+        <label>Fitness / Nutrition Goal</label>
+        <select id="prefGoal" style="margin-bottom:14px;">
+            <option value="maintain">Maintain Weight</option>
+            <option value="lose">Lose Weight (-500 kcal deficit)</option>
+            <option value="gain">Gain Muscle / Weight (+400 kcal surplus)</option>
+        </select>
+
+        <label>Default Unit Preference</label>
+        <select id="prefUnit" style="margin-bottom:14px;">
+            <option value="metric">Metric (cm / kg)</option>
+            <option value="imperial">Imperial (ft/in / lbs)</option>
+        </select>
+
+        <div style="display:flex; gap:8px;">
+            <button class="action-btn" onclick="savePreferences()" style="flex:1; margin-bottom:0;">Save Prefs</button>
+            <button class="action-btn" onclick="resetAppData()" style="flex:1; background:#ef4444; color:#fff; margin-bottom:0;">Reset App</button>
+        </div>
     </div>
 </div>
 
 <script>
     let currentUnit = localStorage.getItem('hp_unit') || 'metric';
     let currentLang = localStorage.getItem('hp_lang') || 'en';
+    let userGoal = localStorage.getItem('hp_goal') || 'maintain';
     let history = JSON.parse(localStorage.getItem('hp_history')) || [];
     let foodLog = JSON.parse(localStorage.getItem('hp_foodlog')) || [];
     let chatLog = JSON.parse(localStorage.getItem('hp_chatlog')) || [];
@@ -645,7 +683,6 @@
     let pendingAiFood = null;
     let pendingLabelFood = null;
 
-    // 15 Major Languages configuration (matching user requirements & sample image style)
     const languages = [
         { code: 'en', name: 'English', native: 'English' },
         { code: 'es', name: 'Spanish', native: 'Español' },
@@ -675,7 +712,7 @@
             carbs: "Carbs", fats: "Fats", dbTitle: "Food Database & Manual Logging", searchDb: "Search Database",
             foodName: "Food / Drink Name", foodQty: "Quantity / Serving", addLog: "Add to Log", todayLog: "Today's Food Log",
             waterTitle: "Water Intake Monitor", waterGoalLbl: "Custom Daily Target (Glasses)", setGoal: "Set Goal",
-            progress: "Current Progress", remove: "- Remove", addGlass: "+ Add Glass", langModalTitle: "Language & Preferences",
+            progress: "Current Progress", remove: "- Remove", addGlass: "+ Add Glass", langModalTitle: "Language",
             langModalDesc: "Select your preferred major language:", savePrefs: "Save & Close",
             bmiScoreTitle: "Your BMI Score & Daily Calorie Needs"
         },
@@ -689,7 +726,7 @@
             carbs: "Carbohidratos", fats: "Grasas", dbTitle: "Base de datos y registro manual", searchDb: "Buscar base de datos",
             foodName: "Nombre de comida / bebida", foodQty: "Cantidad / Porción", addLog: "Agregar al registro", todayLog: "Registro de hoy",
             waterTitle: "Monitor de agua", waterGoalLbl: "Meta diaria personalizada (Vasos)", setGoal: "Establecer",
-            progress: "Progreso actual", remove: "- Quitar", addGlass: "+ Agregar vaso", langModalTitle: "Idioma y Preferencias",
+            progress: "Progreso actual", remove: "- Quitar", addGlass: "+ Agregar vaso", langModalTitle: "Idioma",
             langModalDesc: "Selecciona tu idioma principal preferido:", savePrefs: "Guardar y cerrar",
             bmiScoreTitle: "Tu puntaje de IMC y necesidades calóricas"
         },
@@ -703,7 +740,7 @@
             carbs: "कार्ब्स", fats: "वसा", dbTitle: "फ़ूड डेटाबेस और मैन्युअल लॉगिंग", searchDb: "डेटाबेस खोजें",
             foodName: "भोजन / पेय का नाम", foodQty: "मात्रा / सर्विंग", addLog: "लॉग में जोड़ें", todayLog: "आज का भोजन लॉग",
             waterTitle: "पानी सेवन मॉनिटर", waterGoalLbl: "दैनिक लक्ष्य (गिलास)", setGoal: "सेट करें",
-            progress: "वर्तमान प्रगति", remove: "- हटाएं", addGlass: "+ गिलास जोड़ें", langModalTitle: "भाषा और प्राथमिकताएं",
+            progress: "वर्तमान प्रगति", remove: "- हटाएं", addGlass: "+ गिलास जोड़ें", langModalTitle: "भाषा",
             langModalDesc: "अपनी पसंदीदा मुख्य भाषा चुनें:", savePrefs: "सहेजें और बंद करें",
             bmiScoreTitle: "आपका BMI स्कोर और दैनिक कैलोरी आवश्यकता"
         },
@@ -717,7 +754,7 @@
             carbs: "Glucides", fats: "Lipides", dbTitle: "Base de données et saisie manuelle", searchDb: "Rechercher",
             foodName: "Nom de l'aliment / boisson", foodQty: "Quantité", addLog: "Ajouter", todayLog: "Journal d'aujourd'hui",
             waterTitle: "Suivi de l'eau", waterGoalLbl: "Objectif quotidien (Verres)", setGoal: "Définir",
-            progress: "Progrès actuel", remove: "- Retirer", addGlass: "+ Ajouter un verre", langModalTitle: "Langue et préférences",
+            progress: "Progrès actuel", remove: "- Retirer", addGlass: "+ Ajouter un verre", langModalTitle: "Langue",
             langModalDesc: "Sélectionnez votre langue principale :", savePrefs: "Enregistrer",
             bmiScoreTitle: "Votre score IMC et besoins caloriques"
         },
@@ -731,11 +768,10 @@
             carbs: "كربوهيدرات", fats: "دهون", dbTitle: "قاعدة بيانات الأطعمة", searchDb: "بحث في القاعدة",
             foodName: "اسم الطعام / الشراب", foodQty: "الكمية", addLog: "إضافة للسجل", todayLog: "سجل اليوم",
             waterTitle: "مراقبة شرب الماء", waterGoalLbl: "الهدف اليومي (أكواب)", setGoal: "تحديد",
-            progress: "التقدم الحالي", remove: "- إزالة", addGlass: "+ إضافة كوب", langModalTitle: "اللغة والتفضيلات",
+            progress: "التقدم الحالي", remove: "- إزالة", addGlass: "+ إضافة كوب", langModalTitle: "اللغة",
             langModalDesc: "اختر لغتك المفضلة:", savePrefs: "حفظ وإغلاق",
             bmiScoreTitle: "نتيجة مؤشر كتلة الجسم واحتياجات السعرات"
         }
-        // Fallback for other languages to English or localized keys handled dynamically
     };
 
     function t(key) {
@@ -780,18 +816,36 @@
         document.getElementById('btnWaterAdd').textContent = t('addGlass');
         document.getElementById('modalLangTitle').textContent = t('langModalTitle');
         document.getElementById('modalLangDesc').textContent = t('langModalDesc');
-        document.getElementById('btnSavePrefs').textContent = t('savePrefs');
+        document.getElementById('btnSaveLang').textContent = t('savePrefs');
         document.getElementById('lblBmiScoreTitle').textContent = t('bmiScoreTitle');
     }
 
-    function openSettingsModal() {
+    function openLanguageModal() {
         renderLanguageOptions();
+        document.getElementById('languageModal').style.display = 'flex';
+    }
+
+    function closeLanguageModal() {
+        document.getElementById('languageModal').style.display = 'none';
+        applyLanguageTranslations();
+    }
+
+    function openSettingsModal() {
+        document.getElementById('prefGoal').value = userGoal;
+        document.getElementById('prefUnit').value = currentUnit;
         document.getElementById('settingsModal').style.display = 'flex';
     }
 
     function closeSettingsModal() {
         document.getElementById('settingsModal').style.display = 'none';
-        applyLanguageTranslations();
+    }
+
+    function savePreferences() {
+        userGoal = document.getElementById('prefGoal').value;
+        localStorage.setItem('hp_goal', userGoal);
+        let newUnit = document.getElementById('prefUnit').value;
+        setUnit(newUnit);
+        closeSettingsModal();
     }
 
     function renderLanguageOptions() {
@@ -924,8 +978,6 @@
         document.getElementById('tabCalBtn').classList.toggle('active', tab === 'calories');
         document.getElementById('tabAiBtn').classList.toggle('active', tab === 'aiScanner');
         document.getElementById('tabWaterBtn').classList.toggle('active', tab === 'water');
-
-        document.getElementById('unitToggleContainer').style.display = tab === 'bmi' ? 'flex' : 'none';
     }
 
     function switchSubAi(sub) {
@@ -978,6 +1030,14 @@
             bmr -= 161;
         }
         let maintenanceCalories = Math.round(bmr * activityMultiplier);
+        
+        // Adjust calories according to goal preference
+        if (userGoal === 'lose') {
+            maintenanceCalories -= 500;
+        } else if (userGoal === 'gain') {
+            maintenanceCalories += 400;
+        }
+
         dailyTargetCal = maintenanceCalories;
         localStorage.setItem('hp_targetcal', dailyTargetCal);
 
@@ -987,7 +1047,7 @@
         document.getElementById('bmiCategory').textContent = category;
         document.getElementById('bmiCategory').style.color = color;
         document.getElementById('bmiAdvice').textContent = advice;
-        document.getElementById('bmrInfo').textContent = `Estimated Daily Maintenance Calories: ${maintenanceCalories} kcal/day`;
+        document.getElementById('bmrInfo').textContent = `Target Daily Calories (${userGoal.toUpperCase()}): ${maintenanceCalories} kcal/day`;
 
         let dateStr = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
         history.unshift({ bmi, category, details, date: dateStr });
