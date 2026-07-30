@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthPulse - Pro AI Health & Calorie Coach</title>
+    <title>HealthPulse Pro - AI & Chat Calorie Coach</title>
     <style>
         :root {
             --bg-color: #095c47;
@@ -73,8 +73,8 @@
             background: none;
             border: none;
             color: #cbd5e1;
-            padding: 6px 4px;
-            font-size: 0.73rem;
+            padding: 6px 2px;
+            font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
             border-radius: 8px;
@@ -199,7 +199,7 @@
         .history-info span {
             display: block;
             color: #cbd5e1;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             line-height: 1.3;
         }
         .del-btn-round {
@@ -238,41 +238,62 @@
             margin-bottom: 4px;
         }
         .cal-box strong {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             color: var(--accent-gold);
         }
-        .water-card {
-            background-color: var(--card-bg);
-            padding: 16px;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .water-glasses {
-            display: flex;
-            justify-content: center;
+        .macros-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
-            flex-wrap: wrap;
-            margin: 12px 0;
+            margin-bottom: 16px;
         }
-        .glass {
-            width: 32px;
-            height: 40px;
-            border: 2px solid var(--accent-blue);
-            border-radius: 0 0 8px 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.7rem;
-            font-weight: bold;
+        .macro-card {
             background-color: #064032;
-            color: #cbd5e1;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            font-size: 0.75rem;
         }
-        .glass.filled {
-            background-color: var(--accent-blue);
+        .macro-card span {
+            display: block;
+            color: #cbd5e1;
+            margin-bottom: 2px;
+        }
+        .macro-card strong {
+            color: var(--accent-gold);
+            font-size: 0.95rem;
+        }
+        .chat-container {
+            background-color: #064032;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            height: 250px;
+            overflow-y: auto;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .chat-msg {
+            padding: 8px 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+        .chat-msg.user {
+            background-color: var(--accent-gold);
             color: #064032;
+            align-self: flex-end;
+            font-weight: 500;
+        }
+        .chat-msg.ai {
+            background-color: var(--card-bg);
+            color: #ffffff;
+            align-self: flex-start;
+            border: 1px solid var(--border-color);
         }
         .camera-preview {
             width: 100%;
@@ -296,15 +317,16 @@
         </div>
     </div>
 
-    <!-- MAIN APP TABS (Includes Snap & Auto Snap AI, Water, Database) -->
+    <!-- TABS -->
     <div class="nav-tabs">
         <button id="tabBmiBtn" class="nav-tab-btn active" onclick="switchTab('bmi')">BMI</button>
-        <button id="tabCalBtn" class="nav-tab-btn" onclick="switchTab('calories')">Calories</button>
+        <button id="tabChatBtn" class="nav-tab-btn" onclick="switchTab('chat')">AI Chat</button>
+        <button id="tabCalBtn" class="nav-tab-btn" onclick="switchTab('calories')">Nutrition</button>
         <button id="tabAiBtn" class="nav-tab-btn" onclick="switchTab('aiScanner')">Snap AI</button>
         <button id="tabWaterBtn" class="nav-tab-btn" onclick="switchTab('water')">Water</button>
     </div>
 
-    <!-- TAB 1: BMI & PROFILE -->
+    <!-- TAB 1: BMI -->
     <div id="paneBmi" class="tab-pane active">
         <div class="box">
             <form id="bmiForm" onsubmit="calculateBMI(event)">
@@ -366,7 +388,24 @@
         <div id="historyList"></div>
     </div>
 
-    <!-- TAB 2: CALORIE METER & FOOD DATABASE -->
+    <!-- TAB 2: AI CHAT TRACKER -->
+    <div id="tabPaneChat" class="tab-pane">
+        <div class="box">
+            <div class="section-title" style="font-size:0.95rem; margin-bottom:6px;">Conversational AI Coach</div>
+            <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Type naturally like: "I ate 2 eggs and a glass of milk for breakfast"</p>
+            
+            <div class="chat-container" id="chatWindow">
+                <div class="chat-msg ai">Hello! Tell me what you ate or drank today, and I'll log your calories & macros instantly.</div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="chatInput" placeholder="Type your meal here..." style="margin-bottom:0;" autocomplete="off" onkeypress="if(event.key==='Enter') sendChatMessage()">
+                <button class="action-btn" style="width:75px; margin-bottom:0;" onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: NUTRITIONAL TRACKER -->
     <div id="tabPaneCal" class="tab-pane">
         <div class="calorie-summary">
             <div class="cal-box">
@@ -379,20 +418,35 @@
             </div>
         </div>
 
+        <div class="macros-bar">
+            <div class="macro-card">
+                <span>Protein</span>
+                <strong id="proteinDisplay">0g</strong>
+            </div>
+            <div class="macro-card">
+                <span>Carbs</span>
+                <strong id="carbsDisplay">0g</strong>
+            </div>
+            <div class="macro-card">
+                <span>Fats</span>
+                <strong id="fatsDisplay">0g</strong>
+            </div>
+        </div>
+
         <div class="box">
-            <div class="section-title" style="font-size:0.95rem; margin-bottom:8px;">Global & Regional Food Database Search</div>
-            <label>Search Food / Drink</label>
-            <input type="text" id="dbSearchInput" placeholder="e.g. Biryani, Apple, Roti, Salad..." oninput="filterFoodDatabase()">
-            <div id="dbSearchResults" style="max-height: 130px; overflow-y: auto; margin-bottom: 12px; display:none;"></div>
+            <div class="section-title" style="font-size:0.95rem; margin-bottom:8px;">Food Database & Manual Logging</div>
+            <label>Search Database</label>
+            <input type="text" id="dbSearchInput" placeholder="Search food items..." oninput="filterFoodDatabase()">
+            <div id="dbSearchResults" style="max-height: 120px; overflow-y: auto; margin-bottom: 12px; display:none;"></div>
 
             <form id="foodForm" onsubmit="addFoodItem(event)">
-                <label>Selected Item</label>
-                <input type="text" id="foodName" placeholder="Select from search or type custom" autocomplete="off" required>
+                <label>Food / Drink Name</label>
+                <input type="text" id="foodName" placeholder="e.g. Oatmeal" autocomplete="off" required>
 
-                <label>Quantity / Serving Size</label>
-                <input type="text" id="foodQty" placeholder="e.g. 1 bowl, 200g, 1 plate" autocomplete="off" required>
+                <label>Quantity / Serving</label>
+                <input type="text" id="foodQty" placeholder="e.g. 1 bowl" autocomplete="off" required>
 
-                <button type="submit" class="action-btn">Add to Daily Log</button>
+                <button type="submit" class="action-btn">Add to Log</button>
             </form>
         </div>
 
@@ -400,45 +454,59 @@
         <div id="foodList"></div>
     </div>
 
-    <!-- TAB 3: AI SNAP & AUTO SNAP SCANNER -->
+    <!-- TAB 4: SNAP AI -->
     <div id="tabPaneAi" class="tab-pane">
         <div class="box">
-            <div class="section-title" style="margin-bottom:8px;">AI Snap & Auto Snap Analyzer</div>
-            <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;">Capture a photo or upload from your gallery. Our AI image recognition instantly detects your food, calculates nutritional details, and logs it.</p>
+            <div class="section-title" style="margin-bottom:8px;">AI Snap & Auto Snap Scanner</div>
+            <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;">Take or upload a food picture. Our image recognition detects the meal and estimates calories & macros.</p>
             
             <input type="file" id="foodImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(event)">
-            <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📸 Snap & Auto Snap Photo</button>
+            <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📸 Snap Photo</button>
             
             <img id="imagePreview" class="camera-preview" alt="Food Preview">
             
             <div id="aiAnalysisPrompt" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
-                <label>AI Identified Item (Edit if needed):</label>
-                <input type="text" id="aiUserFoodName" placeholder="e.g. Chicken Biryani, Paneer Tikka">
+                <label>Recognized Item (Edit if needed):</label>
+                <input type="text" id="aiUserFoodName" placeholder="e.g. Biryani">
                 
                 <label>Serving Quantity</label>
-                <input type="text" id="aiUserFoodQty" placeholder="e.g. 1 plate, 250g">
+                <input type="text" id="aiUserFoodQty" placeholder="e.g. 1 plate">
 
-                <button class="action-btn" onclick="processAiIdentification()" style="font-size:0.85rem; padding:10px;">Confirm & Calculate Calories</button>
+                <button class="action-btn" onclick="processAiIdentification()" style="font-size:0.85rem; padding:10px;">Confirm & Log</button>
             </div>
 
             <div id="aiAnalysisResult" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
                 <strong id="aiFoodName" style="display:block; color:var(--accent-gold); margin-bottom:4px;">-</strong>
                 <span id="aiFoodCals" style="display:block; font-size:0.9rem; color:#34d399; margin-bottom:8px;">-</span>
-                <button class="action-btn" onclick="logAiFood()" style="font-size:0.85rem; padding:8px;">Add to Daily Log</button>
+                <button class="action-btn" onclick="logAiFood()" style="font-size:0.85rem; padding:8px;">Add to Log</button>
             </div>
         </div>
     </div>
 
-    <!-- TAB 4: WATER INTAKE MONITOR -->
+    <!-- TAB 5: WATER MONITOR (Editable Goal & Glasses) -->
     <div id="tabPaneWater" class="tab-pane">
-        <div class="water-card">
-            <div class="section-title" style="margin-bottom:4px;">Daily Water Hydration</div>
-            <p style="font-size:0.8rem; color:#cbd5e1; margin-bottom:10px;">Goal: 8 Glasses (~2 Liters)</p>
-            <strong id="waterCountDisplay" style="font-size: 2rem; color: var(--accent-blue);">0 / 8 Glasses</strong>
+        <div class="box">
+            <div class="section-title" style="margin-bottom:8px;">Water Intake Monitor</div>
             
-            <div class="water-glasses" id="waterGlassesContainer"></div>
-            
-            <button class="action-btn" onclick="addWaterGlass()" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; margin-top:4px;">+ Add 1 Glass</button>
+            <div style="margin-bottom:12px;">
+                <label>Custom Daily Target (Glasses)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="number" id="waterGoalInput" value="8" min="1" max="25" style="margin-bottom:0;" inputmode="numeric">
+                    <button class="action-btn" style="width:100px; margin-bottom:0; font-size:0.85rem;" onclick="updateWaterGoal()">Set Goal</button>
+                </div>
+            </div>
+
+            <div style="text-align:center; padding:10px; background:#064032; border-radius:10px; border:1px solid var(--border-color);">
+                <span style="font-size:0.8rem; color:#cbd5e1; display:block;">Current Progress</span>
+                <strong id="waterCountDisplay" style="font-size: 2rem; color: var(--accent-blue);">0 / 8 Glasses</strong>
+                
+                <div class="water-glasses" id="waterGlassesContainer" style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin:12px 0;"></div>
+                
+                <div style="display:flex; gap:8px;">
+                    <button class="action-btn" onclick="adjustWater(-1)" style="background:#ef4444; color:#fff; margin-bottom:0;">- Remove</button>
+                    <button class="action-btn" onclick="adjustWater(1)" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; margin-bottom:0;">+ Add Glass</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -447,36 +515,38 @@
     let currentUnit = 'metric';
     let history = JSON.parse(localStorage.getItem('hp_history')) || [];
     let foodLog = JSON.parse(localStorage.getItem('hp_foodlog')) || [];
+    let chatLog = JSON.parse(localStorage.getItem('hp_chatlog')) || [];
     let dailyTargetCal = parseInt(localStorage.getItem('hp_targetcal')) || 2000;
     let waterCount = parseInt(localStorage.getItem('hp_water')) || 0;
+    let waterGoal = parseInt(localStorage.getItem('hp_watergoal')) || 8;
     let pendingAiFood = null;
 
-    // Comprehensive Global & Regional Food Database
     const foodDatabase = [
-        { name: 'Chicken Biryani', cals: 500, unit: '1 plate' },
-        { name: 'Apple', cals: 95, unit: '1 medium' },
-        { name: 'Banana', cals: 105, unit: '1 medium' },
-        { name: 'Plain Rice', cals: 200, unit: '1 bowl' },
-        { name: 'Chicken Breast', cals: 230, unit: '1 fillet' },
-        { name: 'Pepperoni Pizza', cals: 285, unit: '1 slice' },
-        { name: 'Whole Milk', cals: 150, unit: '1 glass' },
-        { name: 'Caffe Latte', cals: 120, unit: '1 cup' },
-        { name: 'Vegetable Salad', cals: 150, unit: '1 bowl' },
-        { name: 'Boiled Egg', cals: 75, unit: '1 large' },
-        { name: 'Whole Wheat Bread', cals: 80, unit: '1 slice' },
-        { name: 'Oatmeal', cals: 160, unit: '1 bowl' },
-        { name: 'Cheeseburger', cals: 530, unit: '1 burger' },
-        { name: 'French Fries', cals: 360, unit: '1 portion' },
-        { name: 'Orange Juice', cals: 110, unit: '1 glass' },
-        { name: 'Dal Tadka', cals: 180, unit: '1 bowl' },
-        { name: 'Paneer Butter Masala', cals: 350, unit: '1 bowl' },
-        { name: 'Roti / Chapati', cals: 104, unit: '1 piece' }
+        { name: 'Chicken Biryani', cals: 500, p: 25, c: 60, f: 18, unit: '1 plate' },
+        { name: 'Apple', cals: 95, p: 0, c: 25, f: 0, unit: '1 medium' },
+        { name: 'Banana', cals: 105, p: 1, c: 27, f: 0, unit: '1 medium' },
+        { name: 'Plain Rice', cals: 200, p: 4, c: 44, f: 0, unit: '1 bowl' },
+        { name: 'Chicken Breast', cals: 230, p: 43, c: 0, f: 5, unit: '1 fillet' },
+        { name: 'Pepperoni Pizza', cals: 285, p: 12, c: 30, f: 12, unit: '1 slice' },
+        { name: 'Whole Milk', cals: 150, p: 8, c: 12, f: 8, unit: '1 glass' },
+        { name: 'Caffe Latte', cals: 120, p: 6, c: 10, f: 5, unit: '1 cup' },
+        { name: 'Vegetable Salad', cals: 150, p: 3, c: 10, f: 10, unit: '1 bowl' },
+        { name: 'Boiled Egg', cals: 75, p: 6, c: 1, f: 5, unit: '1 large' },
+        { name: 'Whole Wheat Bread', cals: 80, p: 4, c: 15, f: 1, unit: '1 slice' },
+        { name: 'Oatmeal', cals: 160, p: 6, c: 28, f: 3, unit: '1 bowl' },
+        { name: 'Cheeseburger', cals: 530, p: 30, c: 40, f: 28, unit: '1 burger' },
+        { name: 'French Fries', cals: 360, p: 4, c: 48, f: 17, unit: '1 portion' },
+        { name: 'Orange Juice', cals: 110, p: 2, c: 26, f: 0, unit: '1 glass' },
+        { name: 'Dal Tadka', cals: 180, p: 9, c: 24, f: 5, unit: '1 bowl' },
+        { name: 'Paneer Butter Masala', cals: 350, p: 12, c: 14, f: 28, unit: '1 bowl' },
+        { name: 'Roti / Chapati', cals: 104, p: 3, c: 18, f: 2, unit: '1 piece' }
     ];
 
-    function calculatePreciseCalories(name, qtyText) {
+    function calculateNutrition(name, qtyText) {
         let lowerName = name.toLowerCase();
         let matched = foodDatabase.find(item => lowerName.includes(item.name.toLowerCase()));
-        let base = matched ? matched.cals : 200; 
+        
+        let base = matched ? { cals: matched.cals, p: matched.p, c: matched.c, f: matched.f } : { cals: 200, p: 8, c: 25, f: 7 };
         
         let multiplier = 1;
         let qtyLower = qtyText.toLowerCase();
@@ -491,7 +561,12 @@
             multiplier = 1.5;
         }
 
-        return Math.round(base * multiplier);
+        return {
+            cals: Math.round(base.cals * multiplier),
+            protein: Math.round(base.p * multiplier),
+            carbs: Math.round(base.c * multiplier),
+            fats: Math.round(base.f * multiplier)
+        };
     }
 
     function filterFoodDatabase() {
@@ -510,7 +585,7 @@
 
         let html = '';
         filtered.forEach(f => {
-            html += `<div onclick="selectDatabaseFood('${f.name}', '${f.unit}')" style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer; font-size:0.85rem; background:#064032;">${f.name} (~${f.cals} kcal per ${f.unit})</div>`;
+            html += `<div onclick="selectDatabaseFood('${f.name}', '${f.unit}')" style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer; font-size:0.85rem; background:#064032;">${f.name} (~${f.cals} kcal, P:${f.p}g | C:${f.c}g | F:${f.f}g)</div>`;
         });
         resBox.innerHTML = html;
         resBox.style.display = 'block';
@@ -534,11 +609,13 @@
 
     function switchTab(tab) {
         document.getElementById('paneBmi').classList.toggle('active', tab === 'bmi');
+        document.getElementById('tabPaneChat').classList.toggle('active', tab === 'chat');
         document.getElementById('tabPaneCal').classList.toggle('active', tab === 'calories');
         document.getElementById('tabPaneAi').classList.toggle('active', tab === 'aiScanner');
         document.getElementById('tabPaneWater').classList.toggle('active', tab === 'water');
         
         document.getElementById('tabBmiBtn').classList.toggle('active', tab === 'bmi');
+        document.getElementById('tabChatBtn').classList.toggle('active', tab === 'chat');
         document.getElementById('tabCalBtn').classList.toggle('active', tab === 'calories');
         document.getElementById('tabAiBtn').classList.toggle('active', tab === 'aiScanner');
         document.getElementById('tabWaterBtn').classList.toggle('active', tab === 'water');
@@ -654,9 +731,9 @@
 
         if (!name || !qty) return alert('Please enter food name and quantity.');
 
-        let cals = calculatePreciseCalories(name, qty);
+        let nut = calculateNutrition(name, qty);
 
-        foodLog.unshift({ name: `${name} (${qty})`, cals });
+        foodLog.unshift({ name: `${name} (${qty})`, ...nut });
         localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
         document.getElementById('foodForm').reset();
         renderCalories();
@@ -672,7 +749,14 @@
         document.getElementById('targetCalDisplay').textContent = dailyTargetCal.toLocaleString();
         
         let totalConsumed = foodLog.reduce((sum, item) => sum + item.cals, 0);
+        let totalProtein = foodLog.reduce((sum, item) => sum + item.protein, 0);
+        let totalCarbs = foodLog.reduce((sum, item) => sum + item.carbs, 0);
+        let totalFats = foodLog.reduce((sum, item) => sum + item.fats, 0);
+
         document.getElementById('consumedCalDisplay').textContent = totalConsumed.toLocaleString();
+        document.getElementById('proteinDisplay').textContent = `${totalProtein}g`;
+        document.getElementById('carbsDisplay').textContent = `${totalCarbs}g`;
+        document.getElementById('fatsDisplay').textContent = `${totalFats}g`;
 
         let listEl = document.getElementById('foodList');
         if (foodLog.length === 0) {
@@ -686,12 +770,42 @@
                 <div class="history-item">
                     <div class="history-info">
                         <strong>${f.name}</strong>
-                        <span>${f.cals} kcal</span>
+                        <span>${f.cals} kcal &bull; P:${f.protein}g, C:${f.carbs}g, F:${f.fats}g</span>
                     </div>
                     <button class="del-btn-round" onclick="deleteFoodItem(${idx})" title="Delete">&times;</button>
                 </div>`;
         });
         listEl.innerHTML = html;
+    }
+
+    function sendChatMessage() {
+        let input = document.getElementById('chatInput');
+        let text = input.value.trim();
+        if (!text) return;
+
+        chatLog.push({ sender: 'user', text });
+        input.value = '';
+        
+        // Parse chat text for food logging
+        let nut = calculateNutrition(text, '1 portion');
+        foodLog.unshift({ name: text, ...nut });
+        localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
+        renderCalories();
+
+        let aiReply = `Got it! I've logged "${text}" (~${nut.cals} kcal, P:${nut.protein}g, C:${nut.carbs}g, F:${nut.fats}g) into your daily nutrition tracker.`;
+        chatLog.push({ sender: 'ai', text: aiReply });
+        localStorage.setItem('hp_chatlog', JSON.stringify(chatLog));
+        renderChat();
+    }
+
+    function renderChat() {
+        let win = document.getElementById('chatWindow');
+        let html = '';
+        chatLog.forEach(msg => {
+            html += `<div class="chat-msg ${msg.sender === 'user' ? 'user' : 'ai'}">${msg.text}</div>`;
+        });
+        win.innerHTML = html;
+        win.scrollTop = win.scrollHeight;
     }
 
     function handleImageUpload(event) {
@@ -704,14 +818,11 @@
             imgPrev.src = e.target.result;
             imgPrev.style.display = 'block';
 
-            // Intelligent image pattern simulation for Auto Snap AI
             let sampleDetections = [
                 { name: 'Chicken Biryani', qty: '1 plate' },
                 { name: 'Apple', qty: '1 medium' },
                 { name: 'Cheeseburger', qty: '1 burger' },
-                { name: 'Vegetable Salad', qty: '1 bowl' },
-                { name: 'Caffe Latte', qty: '1 cup' },
-                { name: 'Paneer Butter Masala', qty: '1 bowl' }
+                { name: 'Vegetable Salad', qty: '1 bowl' }
             ];
             let detected = sampleDetections[Math.floor(Math.random() * sampleDetections.length)];
 
@@ -729,18 +840,18 @@
 
         if (!name || !qty) return alert('Please specify what the food/drink is and its quantity.');
 
-        let calculatedCals = calculatePreciseCalories(name, qty);
-        pendingAiFood = { name: `${name} (${qty})`, cals: calculatedCals };
+        let nut = calculateNutrition(name, qty);
+        pendingAiFood = { name: `${name} (${qty})`, ...nut };
 
         document.getElementById('aiAnalysisPrompt').style.display = 'none';
         document.getElementById('aiFoodName').textContent = `AI Recognized: ${pendingAiFood.name}`;
-        document.getElementById('aiFoodCals').textContent = `Calculated Energy: ${pendingAiFood.cals} kcal`;
+        document.getElementById('aiFoodCals').textContent = `${pendingAiFood.cals} kcal | P:${pendingAiFood.protein}g, C:${pendingAiFood.carbs}g, F:${pendingAiFood.fats}g`;
         document.getElementById('aiAnalysisResult').style.display = 'block';
     }
 
     function logAiFood() {
         if (!pendingAiFood) return;
-        foodLog.unshift({ name: pendingAiFood.name, cals: pendingAiFood.cals });
+        foodLog.unshift({ name: pendingAiFood.name, cals: pendingAiFood.cals, protein: pendingAiFood.protein, carbs: pendingAiFood.carbs, fats: pendingAiFood.fats });
         localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
         renderCalories();
         
@@ -751,23 +862,31 @@
         switchTab('calories');
     }
 
+    function updateWaterGoal() {
+        let val = parseInt(document.getElementById('waterGoalInput').value);
+        if (val && val > 0) {
+            waterGoal = val;
+            localStorage.setItem('hp_watergoal', waterGoal);
+            renderWater();
+        }
+    }
+
     function renderWater() {
-        document.getElementById('waterCountDisplay').textContent = `${waterCount} / 8 Glasses`;
+        document.getElementById('waterGoalInput').value = waterGoal;
+        document.getElementById('waterCountDisplay').textContent = `${waterCount} / ${waterGoal} Glasses`;
         let container = document.getElementById('waterGlassesContainer');
         let html = '';
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= waterGoal; i++) {
             let filledClass = i <= waterCount ? 'filled' : '';
-            html += `<div class="glass ${filledClass}" onclick="setWater(${i})">${i}</div>`;
+            html += `<div class="glass ${filledClass}" onclick="setWater(${i})" style="width:28px; height:36px; border:2px solid var(--accent-blue); border-radius:0-0-6px-6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.65rem; font-weight:bold; background-color:${i <= waterCount ? 'var(--accent-blue)' : '#064032'}; color:${i <= waterCount ? '#064032' : '#cbd5e1'};">${i}</div>`;
         }
         container.innerHTML = html;
         localStorage.setItem('hp_water', waterCount);
     }
 
-    function addWaterGlass() {
-        if (waterCount < 8) {
-            waterCount++;
-            renderWater();
-        }
+    function adjustWater(amount) {
+        waterCount = Math.max(0, Math.min(waterGoal, waterCount + amount));
+        renderWater();
     }
 
     function setWater(count) {
@@ -777,6 +896,7 @@
 
     renderHistory();
     renderCalories();
+    renderChat();
     renderWater();
 </script>
 
