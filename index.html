@@ -264,8 +264,8 @@
 
     <!-- MAIN APP TABS -->
     <div class="nav-tabs">
-        <button id="tabBmiBtn" class="nav-tab-btn active" onclick="switchTab('bmi')">BMI & Profile</button>
-        <button id="tabCalBtn" class="nav-tab-btn" onclick="switchTab('calories')">Calorie Meter</button>
+        <button id="tabBmiBtn" class="nav-tab-btn active" onclick="switchTab('bmi')">BMI</button>
+        <button id="tabCalBtn" class="nav-tab-btn" onclick="switchTab('calories')">Calories</button>
         <button id="tabAiBtn" class="nav-tab-btn" onclick="switchTab('aiScanner')">AI Scan</button>
     </div>
 
@@ -348,13 +348,13 @@
 
         <div class="box">
             <form id="foodForm" onsubmit="addFoodItem(event)">
-                <label>Food Item Name</label>
-                <input type="text" id="foodName" placeholder="e.g. Oatmeal, Chicken Salad" autocomplete="off" required>
+                <label>Food / Drink Name</label>
+                <input type="text" id="foodName" placeholder="e.g. Apple, Rice, Milk" autocomplete="off" required>
 
-                <label>Calories (kcal)</label>
-                <input type="number" id="foodCalories" placeholder="e.g. 350" inputmode="numeric" required>
+                <label>Quantity / Serving Size</label>
+                <input type="text" id="foodQty" placeholder="e.g. 1 bowl, 200g, 1 glass" autocomplete="off" required>
 
-                <button type="submit" class="action-btn">Add to Daily Log</button>
+                <button type="submit" class="action-btn">Calculate & Add Calories</button>
             </form>
         </div>
 
@@ -366,13 +366,23 @@
     <div id="tabPaneAi" class="tab-pane">
         <div class="box">
             <div class="section-title" style="margin-bottom:8px;">AI Food & Drink Analyzer</div>
-            <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;">Upload or take a picture of your food/drink. Our visual analysis tool estimates the contents and logs the calories instantly.</p>
+            <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;">Upload or capture a photo. Our system will prompt you to identify the item and serving amount for precise calorie estimation.</p>
             
             <input type="file" id="foodImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(event)">
             <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📷 Take / Upload Picture</button>
             
             <img id="imagePreview" class="camera-preview" alt="Food Preview">
             
+            <div id="aiAnalysisPrompt" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
+                <label>What food or drink is this?</label>
+                <input type="text" id="aiUserFoodName" placeholder="e.g. Chicken Biryani, Latte">
+                
+                <label>Quantity / Serving Size</label>
+                <input type="text" id="aiUserFoodQty" placeholder="e.g. 1 plate, 250ml">
+
+                <button class="action-btn" onclick="processAiIdentification()" style="font-size:0.85rem; padding:10px;">Analyze Precise Calories</button>
+            </div>
+
             <div id="aiAnalysisResult" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
                 <strong id="aiFoodName" style="display:block; color:var(--accent-gold); margin-bottom:4px;">-</strong>
                 <span id="aiFoodCals" style="display:block; font-size:0.9rem; color:#34d399; margin-bottom:8px;">-</span>
@@ -388,6 +398,49 @@
     let foodLog = JSON.parse(localStorage.getItem('hp_foodlog')) || [];
     let dailyTargetCal = parseInt(localStorage.getItem('hp_targetcal')) || 2000;
     let pendingAiFood = null;
+
+    // Database for precise calorie calculations based on keywords & quantities
+    const calorieDatabase = [
+        { keywords: ['apple', 'fruit'], baseCals: 95, unit: '1 medium' },
+        { keywords: ['banana', 'fruit'], baseCals: 105, unit: '1 medium' },
+        { keywords: ['rice', 'bowl', 'plate'], baseCals: 200, unit: '1 bowl' },
+        { keywords: ['biryani', 'chicken biryani', 'plate'], baseCals: 500, unit: '1 plate' },
+        { keywords: ['chicken', 'breast', 'grilled'], baseCals: 230, unit: '1 fillet' },
+        { keywords: ['pizza', 'slice'], baseCals: 285, unit: '1 slice' },
+        { keywords: ['milk', 'glass'], baseCals: 150, unit: '1 glass' },
+        { keywords: ['coffee', 'latte', 'cappuccino'], baseCals: 120, unit: '1 cup' },
+        { keywords: ['salad', 'veg'], baseCals: 150, unit: '1 bowl' },
+        { keywords: ['egg', 'boil', 'poached'], baseCals: 75, unit: '1 large' },
+        { keywords: ['bread', 'toast'], baseCals: 80, unit: '1 slice' },
+        { keywords: ['oats', 'oatmeal', 'bowl'], baseCals: 160, unit: '1 bowl' },
+        { keywords: ['burger', 'cheeseburger'], baseCals: 530, unit: '1 burger' },
+        { keywords: ['fries', 'potato'], baseCals: 360, unit: '1 medium portion' },
+        { keywords: ['juice', 'orange juice'], baseCals: 110, unit: '1 glass' }
+    ];
+
+    function calculatePreciseCalories(name, qtyText) {
+        let lowerName = name.toLowerCase();
+        let matched = calorieDatabase.find(item => item.keywords.some(k => lowerName.includes(k)));
+        
+        let base = matched ? matched.baseCals : 200; // default fallback per standard serving
+        
+        // Extract multipliers based on quantity text (e.g., '2', 'double', 'large', 'half', etc.)
+        let multiplier = 1;
+        let qtyLower = qtyText.toLowerCase();
+        
+        let numbers = qtyText.match(/\d+(\.\d+)?/);
+        if (numbers && numbers.length > 0) {
+            multiplier = parseFloat(numbers[0]);
+        } else if (qtyLower.includes('double') || qtyLower.includes('two') || qtyLower.includes('2')) {
+            multiplier = 2;
+        } else if (qtyLower.includes('half') || qtyLower.includes('small')) {
+            multiplier = 0.5;
+        } else if (qtyLower.includes('large') || qtyLower.includes('big')) {
+            multiplier = 1.5;
+        }
+
+        return Math.round(base * multiplier);
+    }
 
     function setUnit(unit) {
         currentUnit = unit;
@@ -514,11 +567,13 @@
     function addFoodItem(e) {
         e.preventDefault();
         let name = document.getElementById('foodName').value.trim();
-        let cals = parseInt(document.getElementById('foodCalories').value);
+        let qty = document.getElementById('foodQty').value.trim();
 
-        if (!name || isNaN(cals) || cals <= 0) return alert('Please enter valid food details.');
+        if (!name || !qty) return alert('Please enter food name and quantity.');
 
-        foodLog.unshift({ name, cals });
+        let cals = calculatePreciseCalories(name, qty);
+
+        foodLog.unshift({ name: `${name} (${qty})`, cals });
         localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
         document.getElementById('foodForm').reset();
         renderCalories();
@@ -566,23 +621,28 @@
             imgPrev.src = e.target.result;
             imgPrev.style.display = 'block';
 
-            // Simulate intelligent image analysis (randomized realistic food estimation mock)
-            let mockFoods = [
-                { name: 'Grilled Chicken Salad with Vinaigrette', cals: 340 },
-                { name: 'Avocado Toast with Poached Egg', cals: 290 },
-                { name: 'Classic Pepperoni Slice Pizza', cals: 380 },
-                { name: 'Fresh Fruit Smoothie Bowl', cals: 250 },
-                { name: 'Cheeseburger with Small Fries', cals: 650 },
-                { name: 'Steamed Rice with Mixed Vegetables', cals: 310 }
-            ];
-            let detected = mockFoods[Math.floor(Math.random() * mockFoods.length)];
-            pendingAiFood = detected;
-
-            document.getElementById('aiFoodName').textContent = `Detected: ${detected.name}`;
-            document.getElementById('aiFoodCals').textContent = `Estimated Energy: ~${detected.cals} kcal`;
-            document.getElementById('aiAnalysisResult').style.display = 'block';
+            // Reset result and show prompt for user to specify item and quantity accurately
+            document.getElementById('aiAnalysisResult').style.display = 'none';
+            document.getElementById('aiAnalysisPrompt').style.display = 'block';
+            document.getElementById('aiUserFoodName').value = '';
+            document.getElementById('aiUserFoodQty').value = '';
         };
         reader.readAsDataURL(file);
+    }
+
+    function processAiIdentification() {
+        let name = document.getElementById('aiUserFoodName').value.trim();
+        let qty = document.getElementById('aiUserFoodQty').value.trim();
+
+        if (!name || !qty) return alert('Please specify what the food/drink is and its quantity.');
+
+        let calculatedCals = calculatePreciseCalories(name, qty);
+        pendingAiFood = { name: `${name} (${qty})`, cals: calculatedCals };
+
+        document.getElementById('aiAnalysisPrompt').style.display = 'none';
+        document.getElementById('aiFoodName').textContent = `Identified: ${pendingAiFood.name}`;
+        document.getElementById('aiFoodCals').textContent = `Calculated Energy: ${pendingAiFood.cals} kcal`;
+        document.getElementById('aiAnalysisResult').style.display = 'block';
     }
 
     function logAiFood() {
@@ -591,7 +651,6 @@
         localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
         renderCalories();
         
-        // Reset scanner UI and switch to Calorie Meter tab
         document.getElementById('aiAnalysisResult').style.display = 'none';
         document.getElementById('imagePreview').style.display = 'none';
         document.getElementById('foodImageInput').value = '';
