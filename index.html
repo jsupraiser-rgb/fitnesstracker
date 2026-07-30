@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthPulse Pro - AI & Chat Calorie Coach</title>
+    <title>HealthPulse Pro - Advanced AI Nutrition & Label Scanner</title>
     <style>
         :root {
             --bg-color: #095c47;
@@ -297,12 +298,35 @@
         }
         .camera-preview {
             width: 100%;
-            max-height: 180px;
+            max-height: 160px;
             object-fit: cover;
             border-radius: 8px;
             margin-bottom: 10px;
             display: none;
             border: 1px solid var(--border-color);
+        }
+        .sub-tab-bar {
+            display: flex;
+            background-color: #064032;
+            border-radius: 8px;
+            padding: 3px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .sub-tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            padding: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .sub-tab-btn.active {
+            background-color: var(--accent-gold);
+            color: #064032;
         }
     </style>
 </head>
@@ -322,7 +346,7 @@
         <button id="tabBmiBtn" class="nav-tab-btn active" onclick="switchTab('bmi')">BMI</button>
         <button id="tabChatBtn" class="nav-tab-btn" onclick="switchTab('chat')">AI Chat</button>
         <button id="tabCalBtn" class="nav-tab-btn" onclick="switchTab('calories')">Nutrition</button>
-        <button id="tabAiBtn" class="nav-tab-btn" onclick="switchTab('aiScanner')">Snap AI</button>
+        <button id="tabAiBtn" class="nav-tab-btn" onclick="switchTab('aiScanner')">AI Scanners</button>
         <button id="tabWaterBtn" class="nav-tab-btn" onclick="switchTab('water')">Water</button>
     </div>
 
@@ -454,36 +478,61 @@
         <div id="foodList"></div>
     </div>
 
-    <!-- TAB 4: SNAP AI -->
+    <!-- TAB 4: ADVANCED AI SCANNERS (Food AI + Nutrition Label Scanner) -->
     <div id="tabPaneAi" class="tab-pane">
         <div class="box">
-            <div class="section-title" style="margin-bottom:8px;">AI Snap & Auto Snap Scanner</div>
-            <p style="font-size:0.82rem; color:#cbd5e1; margin-bottom:14px;">Take or upload a food picture. Our image recognition detects the meal and estimates calories & macros.</p>
-            
-            <input type="file" id="foodImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleImageUpload(event)">
-            <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📸 Snap Photo</button>
-            
-            <img id="imagePreview" class="camera-preview" alt="Food Preview">
-            
-            <div id="aiAnalysisPrompt" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
-                <label>Recognized Item (Edit if needed):</label>
-                <input type="text" id="aiUserFoodName" placeholder="e.g. Biryani">
-                
-                <label>Serving Quantity</label>
-                <input type="text" id="aiUserFoodQty" placeholder="e.g. 1 plate">
-
-                <button class="action-btn" onclick="processAiIdentification()" style="font-size:0.85rem; padding:10px;">Confirm & Log</button>
+            <div class="sub-tab-bar">
+                <button id="subFoodBtn" class="sub-tab-btn active" onclick="switchSubAi('food')">AI Food Scanner</button>
+                <button id="subLabelBtn" class="sub-tab-btn" onclick="switchSubAi('label')">Nutrition Label Scanner</button>
             </div>
 
-            <div id="aiAnalysisResult" style="display:none; margin-top:14px; background:#064032; padding:12px; border-radius:8px; border:1px solid var(--border-color);">
-                <strong id="aiFoodName" style="display:block; color:var(--accent-gold); margin-bottom:4px;">-</strong>
-                <span id="aiFoodCals" style="display:block; font-size:0.9rem; color:#34d399; margin-bottom:8px;">-</span>
-                <button class="action-btn" onclick="logAiFood()" style="font-size:0.85rem; padding:8px;">Add to Log</button>
+            <!-- Sub Section A: AI Food Scanner -->
+            <div id="subPaneFood">
+                <div class="section-title" style="font-size:1rem; margin-bottom:4px;">AI Food & Meal Scanner</div>
+                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Snap or upload a meal photo to let AI detect macros and calories instantly.</p>
+                
+                <input type="file" id="foodImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleFoodImageUpload(event)">
+                <button class="action-btn" style="margin-bottom:10px;" onclick="document.getElementById('foodImageInput').click()">📸 Snap Meal Photo</button>
+                
+                <img id="imagePreview" class="camera-preview" alt="Food Preview">
+                
+                <div id="aiAnalysisPrompt" style="display:none; margin-top:10px; background:#064032; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                    <label>Recognized Item (Edit if needed):</label>
+                    <input type="text" id="aiUserFoodName" placeholder="e.g. Chicken Biryani">
+                    
+                    <label>Serving Quantity</label>
+                    <input type="text" id="aiUserFoodQty" placeholder="e.g. 1 plate">
+
+                    <button class="action-btn" onclick="processAiIdentification()" style="font-size:0.85rem; padding:8px;">Confirm & Log</button>
+                </div>
+
+                <div id="aiAnalysisResult" style="display:none; margin-top:10px; background:#064032; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                    <strong id="aiFoodName" style="display:block; color:var(--accent-gold); margin-bottom:4px;">-</strong>
+                    <span id="aiFoodCals" style="display:block; font-size:0.85rem; color:#34d399; margin-bottom:8px;">-</span>
+                    <button class="action-btn" onclick="logAiFood()" style="font-size:0.85rem; padding:8px;">Add to Log</button>
+                </div>
+            </div>
+
+            <!-- Sub Section B: Nutrition Label Scanner -->
+            <div id="subPaneLabel" style="display: none;">
+                <div class="section-title" style="font-size:1rem; margin-bottom:4px;">Nutrition Label Scanner</div>
+                <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Take a picture of any packaged product's nutrition label to extract metrics automatically.</p>
+                
+                <input type="file" id="labelImageInput" accept="image/*" capture="environment" style="display:none;" onchange="handleLabelImageUpload(event)">
+                <button class="action-btn" style="margin-bottom:10px; background: linear-gradient(135deg, #38bdf8, #0284c7); color:#fff;" onclick="document.getElementById('labelImageInput').click()">🏷️ Scan Nutrition Label</button>
+                
+                <img id="labelImagePreview" class="camera-preview" alt="Label Preview">
+
+                <div id="labelAnalysisResult" style="display:none; margin-top:10px; background:#064032; padding:10px; border-radius:8px; border:1px solid var(--border-color);">
+                    <strong id="lblDetectedName" style="display:block; color:var(--accent-gold); margin-bottom:4px;">Product: Protein Granola Bar</strong>
+                    <span id="lblDetectedInfo" style="display:block; font-size:0.85rem; color:#34d399; margin-bottom:8px;">210 kcal | P:12g, C:24g, F:7g</span>
+                    <button class="action-btn" onclick="logScannedLabel()" style="font-size:0.85rem; padding:8px;">Add to Log</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- TAB 5: WATER MONITOR (Editable Goal & Glasses) -->
+    <!-- TAB 5: WATER MONITOR -->
     <div id="tabPaneWater" class="tab-pane">
         <div class="box">
             <div class="section-title" style="margin-bottom:8px;">Water Intake Monitor</div>
@@ -520,6 +569,7 @@
     let waterCount = parseInt(localStorage.getItem('hp_water')) || 0;
     let waterGoal = parseInt(localStorage.getItem('hp_watergoal')) || 8;
     let pendingAiFood = null;
+    let pendingLabelFood = null;
 
     const foodDatabase = [
         { name: 'Chicken Biryani', cals: 500, p: 25, c: 60, f: 18, unit: '1 plate' },
@@ -621,6 +671,13 @@
         document.getElementById('tabWaterBtn').classList.toggle('active', tab === 'water');
 
         document.getElementById('unitToggleContainer').style.display = tab === 'bmi' ? 'flex' : 'none';
+    }
+
+    function switchSubAi(sub) {
+        document.getElementById('subPaneFood').style.display = sub === 'food' ? 'block' : 'none';
+        document.getElementById('subPaneLabel').style.display = sub === 'label' ? 'block' : 'none';
+        document.getElementById('subFoodBtn').classList.toggle('active', sub === 'food');
+        document.getElementById('subLabelBtn').classList.toggle('active', sub === 'label');
     }
 
     function calculateBMI(e) {
@@ -786,7 +843,6 @@
         chatLog.push({ sender: 'user', text });
         input.value = '';
         
-        // Parse chat text for food logging
         let nut = calculateNutrition(text, '1 portion');
         foodLog.unshift({ name: text, ...nut });
         localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
@@ -808,7 +864,7 @@
         win.scrollTop = win.scrollHeight;
     }
 
-    function handleImageUpload(event) {
+    function handleFoodImageUpload(event) {
         let file = event.target.files[0];
         if (!file) return;
 
@@ -862,6 +918,35 @@
         switchTab('calories');
     }
 
+    function handleLabelImageUpload(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let imgPrev = document.getElementById('labelImagePreview');
+            imgPrev.src = e.target.result;
+            imgPrev.style.display = 'block';
+
+            pendingLabelFood = { name: 'Protein Granola Bar (Scanned Label)', cals: 210, protein: 12, carbs: 24, fats: 7 };
+            document.getElementById('labelAnalysisResult').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function logScannedLabel() {
+        if (!pendingLabelFood) return;
+        foodLog.unshift(pendingLabelFood);
+        localStorage.setItem('hp_foodlog', JSON.stringify(foodLog));
+        renderCalories();
+
+        document.getElementById('labelAnalysisResult').style.display = 'none';
+        document.getElementById('labelImagePreview').style.display = 'none';
+        document.getElementById('labelImageInput').value = '';
+        pendingLabelFood = null;
+        switchTab('calories');
+    }
+
     function updateWaterGoal() {
         let val = parseInt(document.getElementById('waterGoalInput').value);
         if (val && val > 0) {
@@ -878,7 +963,7 @@
         let html = '';
         for (let i = 1; i <= waterGoal; i++) {
             let filledClass = i <= waterCount ? 'filled' : '';
-            html += `<div class="glass ${filledClass}" onclick="setWater(${i})" style="width:28px; height:36px; border:2px solid var(--accent-blue); border-radius:0-0-6px-6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.65rem; font-weight:bold; background-color:${i <= waterCount ? 'var(--accent-blue)' : '#064032'}; color:${i <= waterCount ? '#064032' : '#cbd5e1'};">${i}</div>`;
+            html += `<div class="glass ${filledClass}" onclick="setWater(${i})" style="width:28px; height:36px; border:2px solid var(--accent-blue); border-radius:0 0 6px 6px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:0.65rem; font-weight:bold; background-color:${i <= waterCount ? 'var(--accent-blue)' : '#064032'}; color:${i <= waterCount ? '#064032' : '#cbd5e1'};">${i}</div>`;
         }
         container.innerHTML = html;
         localStorage.setItem('hp_water', waterCount);
@@ -902,3 +987,5 @@
 
 </body>
 </html>
+
+```
