@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthPulse Pro - Advanced AI Nutrition & Label Scanner</title>
+    <title>HealthPulse Pro - AI Nutrition & Settings</title>
     <style>
         :root {
             --bg-color: #095c47;
@@ -41,6 +41,11 @@
             margin: 0;
             color: var(--accent-gold);
         }
+        .header-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
         .unit-toggle {
             display: flex;
             background-color: #064032;
@@ -52,14 +57,27 @@
             background: none;
             border: none;
             color: #cbd5e1;
-            padding: 6px 12px;
-            font-size: 0.75rem;
+            padding: 6px 10px;
+            font-size: 0.7rem;
             font-weight: bold;
             cursor: pointer;
         }
         .unit-btn.active {
             background-color: var(--accent-gold);
             color: #064032;
+        }
+        .icon-btn {
+            background: #064032;
+            border: 1px solid var(--border-color);
+            color: var(--accent-gold);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
         }
         .nav-tabs {
             display: flex;
@@ -75,7 +93,7 @@
             border: none;
             color: #cbd5e1;
             padding: 6px 2px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: bold;
             cursor: pointer;
             border-radius: 8px;
@@ -328,16 +346,56 @@
             background-color: var(--accent-gold);
             color: #064032;
         }
+        /* Modal Overlay Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 360px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+        .lang-card {
+            background-color: #064032;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .lang-card.selected {
+            border-color: var(--accent-gold);
+            background-color: #095c47;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="top-header">
-        <h1>HealthPulse Pro</h1>
-        <div class="unit-toggle" id="unitToggleContainer">
-            <button id="metricBtn" class="unit-btn active" onclick="setUnit('metric')">Metric</button>
-            <button id="imperialBtn" class="unit-btn" onclick="setUnit('imperial')">Imperial</button>
+        <h1 id="appTitle">HealthPulse Pro</h1>
+        <div class="header-controls">
+            <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+            <button class="icon-btn" onclick="resetAppData()" title="Reset Data" style="color:#ff6b6b;">🔄</button>
+            <div class="unit-toggle" id="unitToggleContainer">
+                <button id="metricBtn" class="unit-btn active" onclick="setUnit('metric')">Metric</button>
+                <button id="imperialBtn" class="unit-btn" onclick="setUnit('imperial')">Imperial</button>
+            </div>
         </div>
     </div>
 
@@ -356,75 +414,75 @@
             <form id="bmiForm" onsubmit="calculateBMI(event)">
                 <div class="row-inputs">
                     <div style="flex:1;">
-                        <label>Age</label>
+                        <label id="lblAge">Age</label>
                         <input type="number" id="userAge" placeholder="Years" min="1" max="120" inputmode="numeric" required>
                     </div>
                     <div style="flex:1;">
-                        <label>Gender</label>
+                        <label id="lblGender">Gender</label>
                         <select id="userGender">
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
+                            <option value="Male" id="optMale">Male</option>
+                            <option value="Female" id="optFemale">Female</option>
+                            <option value="Other" id="optOther">Other</option>
                         </select>
                     </div>
                 </div>
 
                 <div id="metricInputs">
-                    <label>Height (cm)</label>
+                    <label id="lblHeightCm">Height (cm)</label>
                     <input type="number" id="heightCm" placeholder="e.g. 175" step="any" inputmode="decimal">
                     
-                    <label>Weight (kg)</label>
+                    <label id="lblWeightKg">Weight (kg)</label>
                     <input type="number" id="weightKg" placeholder="e.g. 70" step="any" inputmode="decimal">
                 </div>
 
                 <div id="imperialInputs" style="display: none;">
-                    <label>Height</label>
+                    <label id="lblHeightImp">Height</label>
                     <div class="row-inputs">
                         <input type="number" id="heightFt" placeholder="Feet" step="1" inputmode="numeric">
                         <input type="number" id="heightIn" placeholder="Inches" step="any" inputmode="decimal">
                     </div>
                     
-                    <label>Weight (lbs)</label>
+                    <label id="lblWeightLbs">Weight (lbs)</label>
                     <input type="number" id="weightLbs" placeholder="e.g. 154" step="any" inputmode="decimal">
                 </div>
 
-                <label>Activity Level</label>
+                <label id="lblActivity">Activity Level</label>
                 <select id="activityLevel">
-                    <option value="1.2">Sedentary (little or no exercise)</option>
-                    <option value="1.375">Lightly active (light exercise/sports 1-3 days/week)</option>
-                    <option value="1.55" selected>Moderately active (moderate exercise/sports 3-5 days/week)</option>
-                    <option value="1.725">Very active (hard exercise/sports 6-7 days a week)</option>
+                    <option value="1.2" id="act1">Sedentary (little or no exercise)</option>
+                    <option value="1.375" id="act2">Lightly active (sports 1-3 days/week)</option>
+                    <option value="1.55" id="act3" selected>Moderately active (sports 3-5 days/week)</option>
+                    <option value="1.725" id="act4">Very active (hard exercise 6-7 days/week)</option>
                 </select>
 
-                <button type="submit" class="action-btn">Calculate BMI & Plan</button>
+                <button type="submit" class="action-btn" id="btnCalcBmi">Calculate BMI & Plan</button>
             </form>
         </div>
 
         <div id="resultCard" class="result-card">
-            <div style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1;">Your BMI Score & Daily Calorie Needs</div>
+            <div style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1;" id="lblBmiScoreTitle">Your BMI Score & Daily Calorie Needs</div>
             <div class="result-bmi" id="bmiValue">0.0</div>
             <div class="result-category" id="bmiCategory">-</div>
             <div class="result-advice" id="bmiAdvice" style="margin-bottom:8px;">-</div>
             <div style="font-size:0.85rem; color:var(--accent-gold); font-weight:bold;" id="bmrInfo">-</div>
         </div>
 
-        <div class="section-title">Calculation History</div>
+        <div class="section-title" id="lblHistoryTitle">Calculation History</div>
         <div id="historyList"></div>
     </div>
 
     <!-- TAB 2: AI CHAT TRACKER -->
     <div id="tabPaneChat" class="tab-pane">
         <div class="box">
-            <div class="section-title" style="font-size:0.95rem; margin-bottom:6px;">Conversational AI Coach</div>
-            <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;">Type naturally like: "I ate 2 eggs and a glass of milk for breakfast"</p>
+            <div class="section-title" style="font-size:0.95rem; margin-bottom:6px;" id="lblChatTitle">Conversational AI Coach</div>
+            <p style="font-size:0.78rem; color:#cbd5e1; margin-bottom:10px;" id="lblChatDesc">Type naturally like: "I ate 2 eggs and a glass of milk for breakfast"</p>
             
             <div class="chat-container" id="chatWindow">
-                <div class="chat-msg ai">Hello! Tell me what you ate or drank today, and I'll log your calories & macros instantly.</div>
+                <div class="chat-msg ai" id="chatWelcomeMsg">Hello! Tell me what you ate or drank today, and I'll log your calories & macros instantly.</div>
             </div>
 
             <div style="display:flex; gap:8px;">
                 <input type="text" id="chatInput" placeholder="Type your meal here..." style="margin-bottom:0;" autocomplete="off" onkeypress="if(event.key==='Enter') sendChatMessage()">
-                <button class="action-btn" style="width:75px; margin-bottom:0;" onclick="sendChatMessage()">Send</button>
+                <button class="action-btn" style="width:75px; margin-bottom:0;" onclick="sendChatMessage()" id="btnSend">Send</button>
             </div>
         </div>
     </div>
@@ -433,57 +491,57 @@
     <div id="tabPaneCal" class="tab-pane">
         <div class="calorie-summary">
             <div class="cal-box">
-                <span>Daily Target</span>
+                <span id="lblDailyTarget">Daily Target</span>
                 <strong id="targetCalDisplay">2,000</strong>
             </div>
             <div class="cal-box">
-                <span>Total Consumed</span>
+                <span id="lblTotalConsumed">Total Consumed</span>
                 <strong id="consumedCalDisplay" style="color:#34d399;">0</strong>
             </div>
         </div>
 
         <div class="macros-bar">
             <div class="macro-card">
-                <span>Protein</span>
+                <span id="lblMacroProtein">Protein</span>
                 <strong id="proteinDisplay">0g</strong>
             </div>
             <div class="macro-card">
-                <span>Carbs</span>
+                <span id="lblMacroCarbs">Carbs</span>
                 <strong id="carbsDisplay">0g</strong>
             </div>
             <div class="macro-card">
-                <span>Fats</span>
+                <span id="lblMacroFats">Fats</span>
                 <strong id="fatsDisplay">0g</strong>
             </div>
         </div>
 
         <div class="box">
-            <div class="section-title" style="font-size:0.95rem; margin-bottom:8px;">Food Database & Manual Logging</div>
-            <label>Search Database</label>
+            <div class="section-title" style="font-size:0.95rem; margin-bottom:8px;" id="lblDbSectionTitle">Food Database & Manual Logging</div>
+            <label id="lblSearchDb">Search Database</label>
             <input type="text" id="dbSearchInput" placeholder="Search food items..." oninput="filterFoodDatabase()">
             <div id="dbSearchResults" style="max-height: 120px; overflow-y: auto; margin-bottom: 12px; display:none;"></div>
 
             <form id="foodForm" onsubmit="addFoodItem(event)">
-                <label>Food / Drink Name</label>
+                <label id="lblFoodName">Food / Drink Name</label>
                 <input type="text" id="foodName" placeholder="e.g. Oatmeal" autocomplete="off" required>
 
-                <label>Quantity / Serving</label>
+                <label id="lblFoodQty">Quantity / Serving</label>
                 <input type="text" id="foodQty" placeholder="e.g. 1 bowl" autocomplete="off" required>
 
-                <button type="submit" class="action-btn">Add to Log</button>
+                <button type="submit" class="action-btn" id="btnAddLog">Add to Log</button>
             </form>
         </div>
 
-        <div class="section-title">Today's Food Log</div>
+        <div class="section-title" id="lblTodayLogTitle">Today's Food Log</div>
         <div id="foodList"></div>
     </div>
 
-    <!-- TAB 4: ADVANCED AI SCANNERS (Food AI + Nutrition Label Scanner) -->
+    <!-- TAB 4: ADVANCED AI SCANNERS -->
     <div id="tabPaneAi" class="tab-pane">
         <div class="box">
             <div class="sub-tab-bar">
                 <button id="subFoodBtn" class="sub-tab-btn active" onclick="switchSubAi('food')">AI Food Scanner</button>
-                <button id="subLabelBtn" class="sub-tab-btn" onclick="switchSubAi('label')">Nutrition Label Scanner</button>
+                <button id="subLabelBtn" class="sub-tab-btn" onclick="switchSubAi('label')">Nutrition Label</button>
             </div>
 
             <!-- Sub Section A: AI Food Scanner -->
@@ -535,33 +593,49 @@
     <!-- TAB 5: WATER MONITOR -->
     <div id="tabPaneWater" class="tab-pane">
         <div class="box">
-            <div class="section-title" style="margin-bottom:8px;">Water Intake Monitor</div>
+            <div class="section-title" style="margin-bottom:8px;" id="lblWaterTitle">Water Intake Monitor</div>
             
             <div style="margin-bottom:12px;">
-                <label>Custom Daily Target (Glasses)</label>
+                <label id="lblWaterGoal">Custom Daily Target (Glasses)</label>
                 <div style="display:flex; gap:8px;">
                     <input type="number" id="waterGoalInput" value="8" min="1" max="25" style="margin-bottom:0;" inputmode="numeric">
-                    <button class="action-btn" style="width:100px; margin-bottom:0; font-size:0.85rem;" onclick="updateWaterGoal()">Set Goal</button>
+                    <button class="action-btn" style="width:100px; margin-bottom:0; font-size:0.85rem;" onclick="updateWaterGoal()" id="btnSetWaterGoal">Set Goal</button>
                 </div>
             </div>
 
             <div style="text-align:center; padding:10px; background:#064032; border-radius:10px; border:1px solid var(--border-color);">
-                <span style="font-size:0.8rem; color:#cbd5e1; display:block;">Current Progress</span>
+                <span style="font-size:0.8rem; color:#cbd5e1; display:block;" id="lblWaterProgress">Current Progress</span>
                 <strong id="waterCountDisplay" style="font-size: 2rem; color: var(--accent-blue);">0 / 8 Glasses</strong>
                 
                 <div class="water-glasses" id="waterGlassesContainer" style="display:flex; justify-content:center; gap:6px; flex-wrap:wrap; margin:12px 0;"></div>
                 
                 <div style="display:flex; gap:8px;">
-                    <button class="action-btn" onclick="adjustWater(-1)" style="background:#ef4444; color:#fff; margin-bottom:0;">- Remove</button>
-                    <button class="action-btn" onclick="adjustWater(1)" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; margin-bottom:0;">+ Add Glass</button>
+                    <button class="action-btn" onclick="adjustWater(-1)" style="background:#ef4444; color:#fff; margin-bottom:0;" id="btnWaterRem">- Remove</button>
+                    <button class="action-btn" onclick="adjustWater(1)" style="background: linear-gradient(135deg, #38bdf8, #0284c7); color: #fff; margin-bottom:0;" id="btnWaterAdd">+ Add Glass</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- SETTINGS / LANGUAGE MODAL -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; color:var(--accent-gold);" id="modalLangTitle">Language & Preferences</h3>
+            <span onclick="closeSettingsModal()" style="font-size:1.5rem; cursor:pointer; color:#fff;">&times;</span>
+        </div>
+        <p style="font-size:0.8rem; color:#cbd5e1; margin-bottom:12px;" id="modalLangDesc">Select your preferred major language:</p>
+        
+        <div id="languageListContainer"></div>
+        
+        <button class="action-btn" onclick="closeSettingsModal()" style="margin-top:12px;" id="btnSavePrefs">Save & Close</button>
+    </div>
+</div>
+
 <script>
-    let currentUnit = 'metric';
+    let currentUnit = localStorage.getItem('hp_unit') || 'metric';
+    let currentLang = localStorage.getItem('hp_lang') || 'en';
     let history = JSON.parse(localStorage.getItem('hp_history')) || [];
     let foodLog = JSON.parse(localStorage.getItem('hp_foodlog')) || [];
     let chatLog = JSON.parse(localStorage.getItem('hp_chatlog')) || [];
@@ -570,6 +644,186 @@
     let waterGoal = parseInt(localStorage.getItem('hp_watergoal')) || 8;
     let pendingAiFood = null;
     let pendingLabelFood = null;
+
+    // 15 Major Languages configuration (matching user requirements & sample image style)
+    const languages = [
+        { code: 'en', name: 'English', native: 'English' },
+        { code: 'es', name: 'Spanish', native: 'Español' },
+        { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+        { code: 'fr', name: 'French', native: 'Français' },
+        { code: 'pt-br', name: 'Portuguese (Brazil)', native: 'Português (Brasil)' },
+        { code: 'pt', name: 'Portuguese', native: 'Português' },
+        { code: 'ar', name: 'Arabic', native: 'العربية' },
+        { code: 'de', name: 'German', native: 'Deutsch' },
+        { code: 'zh', name: 'Chinese', native: '中文' },
+        { code: 'ja', name: 'Japanese', native: '日本語' },
+        { code: 'ru', name: 'Russian', native: 'Русский' },
+        { code: 'it', name: 'Italian', native: 'Italiano' },
+        { code: 'bn', name: 'Bengali', native: 'বাংলা' },
+        { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+        { code: 'ur', name: 'Urdu', native: 'اردو' }
+    ];
+
+    const translations = {
+        en: {
+            title: "HealthPulse Pro", age: "Age", gender: "Gender", male: "Male", female: "Female", other: "Other",
+            heightCm: "Height (cm)", weightKg: "Weight (kg)", heightImp: "Height", weightLbs: "Weight (lbs)",
+            activity: "Activity Level", calcBtn: "Calculate BMI & Plan", historyTitle: "Calculation History",
+            chatTitle: "Conversational AI Coach", chatDesc: "Type naturally like: \"I ate 2 eggs and a glass of milk for breakfast\"",
+            chatWelcome: "Hello! Tell me what you ate or drank today, and I'll log your calories & macros instantly.",
+            send: "Send", dailyTarget: "Daily Target", totalConsumed: "Total Consumed", protein: "Protein",
+            carbs: "Carbs", fats: "Fats", dbTitle: "Food Database & Manual Logging", searchDb: "Search Database",
+            foodName: "Food / Drink Name", foodQty: "Quantity / Serving", addLog: "Add to Log", todayLog: "Today's Food Log",
+            waterTitle: "Water Intake Monitor", waterGoalLbl: "Custom Daily Target (Glasses)", setGoal: "Set Goal",
+            progress: "Current Progress", remove: "- Remove", addGlass: "+ Add Glass", langModalTitle: "Language & Preferences",
+            langModalDesc: "Select your preferred major language:", savePrefs: "Save & Close",
+            bmiScoreTitle: "Your BMI Score & Daily Calorie Needs"
+        },
+        es: {
+            title: "HealthPulse Pro", age: "Edad", gender: "Género", male: "Masculino", female: "Femenino", other: "Otro",
+            heightCm: "Altura (cm)", weightKg: "Peso (kg)", heightImp: "Altura", weightLbs: "Peso (lbs)",
+            activity: "Nivel de actividad", calcBtn: "Calcular IMC y Plan", historyTitle: "Historial de cálculos",
+            chatTitle: "Entrenador AI Conversacional", chatDesc: "Escribe de forma natural como: \"Comí 2 huevos y un vaso de leche\"",
+            chatWelcome: "¡Hola! Dime qué comiste o bebiste hoy y registraré tus calorías y macros.",
+            send: "Enviar", dailyTarget: "Meta diaria", totalConsumed: "Consumido total", protein: "Proteína",
+            carbs: "Carbohidratos", fats: "Grasas", dbTitle: "Base de datos y registro manual", searchDb: "Buscar base de datos",
+            foodName: "Nombre de comida / bebida", foodQty: "Cantidad / Porción", addLog: "Agregar al registro", todayLog: "Registro de hoy",
+            waterTitle: "Monitor de agua", waterGoalLbl: "Meta diaria personalizada (Vasos)", setGoal: "Establecer",
+            progress: "Progreso actual", remove: "- Quitar", addGlass: "+ Agregar vaso", langModalTitle: "Idioma y Preferencias",
+            langModalDesc: "Selecciona tu idioma principal preferido:", savePrefs: "Guardar y cerrar",
+            bmiScoreTitle: "Tu puntaje de IMC y necesidades calóricas"
+        },
+        hi: {
+            title: "हेल्थपल्स प्रो", age: "आयु", gender: "लिंग", male: "पुरुष", female: "महिला", other: "अन्य",
+            heightCm: "लंबाई (सेमी)", weightKg: "वजन (किलो)", heightImp: "लंबाई", weightLbs: "वजन (पाउंड)",
+            activity: "गतिविधि स्तर", calcBtn: "BMI और योजना की गणना करें", historyTitle: "इतिहास",
+            chatTitle: "एआई कोच", chatDesc: "स्वाभाविक रूप से टाइप करें जैसे: \"मैंने नाश्ते में 2 अंडे खाए\"",
+            chatWelcome: "नमस्ते! मुझे बताएं कि आपने आज क्या खाया या पिया, और मैं आपकी कैलोरी दर्ज कर दूंगा।",
+            send: "भेजें", dailyTarget: "दैनिक लक्ष्य", totalConsumed: "कुल सेवन", protein: "प्रोटीन",
+            carbs: "कार्ब्स", fats: "वसा", dbTitle: "फ़ूड डेटाबेस और मैन्युअल लॉगिंग", searchDb: "डेटाबेस खोजें",
+            foodName: "भोजन / पेय का नाम", foodQty: "मात्रा / सर्विंग", addLog: "लॉग में जोड़ें", todayLog: "आज का भोजन लॉग",
+            waterTitle: "पानी सेवन मॉनिटर", waterGoalLbl: "दैनिक लक्ष्य (गिलास)", setGoal: "सेट करें",
+            progress: "वर्तमान प्रगति", remove: "- हटाएं", addGlass: "+ गिलास जोड़ें", langModalTitle: "भाषा और प्राथमिकताएं",
+            langModalDesc: "अपनी पसंदीदा मुख्य भाषा चुनें:", savePrefs: "सहेजें और बंद करें",
+            bmiScoreTitle: "आपका BMI स्कोर और दैनिक कैलोरी आवश्यकता"
+        },
+        fr: {
+            title: "HealthPulse Pro", age: "Âge", gender: "Genre", male: "Homme", female: "Femme", other: "Autre",
+            heightCm: "Taille (cm)", weightKg: "Poids (kg)", heightImp: "Taille", weightLbs: "Poids (lbs)",
+            activity: "Niveau d'activité", calcBtn: "Calculer l'IMC et le plan", historyTitle: "Historique des calculs",
+            chatTitle: "Coach IA Conversationnel", chatDesc: "Tapez naturellement: \"J'ai mangé 2 œufs\"",
+            chatWelcome: "Bonjour ! Dites-moi ce que vous avez mangé ou bu aujourd'hui.",
+            send: "Envoyer", dailyTarget: "Objectif quotidien", totalConsumed: "Total consommé", protein: "Protéines",
+            carbs: "Glucides", fats: "Lipides", dbTitle: "Base de données et saisie manuelle", searchDb: "Rechercher",
+            foodName: "Nom de l'aliment / boisson", foodQty: "Quantité", addLog: "Ajouter", todayLog: "Journal d'aujourd'hui",
+            waterTitle: "Suivi de l'eau", waterGoalLbl: "Objectif quotidien (Verres)", setGoal: "Définir",
+            progress: "Progrès actuel", remove: "- Retirer", addGlass: "+ Ajouter un verre", langModalTitle: "Langue et préférences",
+            langModalDesc: "Sélectionnez votre langue principale :", savePrefs: "Enregistrer",
+            bmiScoreTitle: "Votre score IMC et besoins caloriques"
+        },
+        ar: {
+            title: "هيلث بولس برو", age: "العمر", gender: "الجنس", male: "ذكر", female: "أنثى", other: "آخر",
+            heightCm: "الطول (سم)", weightKg: "الوزن (كجم)", heightImp: "الطول", weightLbs: "الوزن (رطل)",
+            activity: "مستوى النشاط", calcBtn: "حساب مؤشر كتلة الجسم والخطة", historyTitle: "سجل الحسابات",
+            chatTitle: "مدرب الذكاء الاصطناعي", chatDesc: "اكتب بشكل طبيعي مثل: \"أكلت بيضتين\"",
+            chatWelcome: "مرحباً! أخبرني بما تنازلته اليوم وسأقوم بتسجيل السعرات الحرارية فوراً.",
+            send: "إرسال", dailyTarget: "الهدف اليومي", totalConsumed: "إجمالي المستهلك", protein: "بروتين",
+            carbs: "كربوهيدرات", fats: "دهون", dbTitle: "قاعدة بيانات الأطعمة", searchDb: "بحث في القاعدة",
+            foodName: "اسم الطعام / الشراب", foodQty: "الكمية", addLog: "إضافة للسجل", todayLog: "سجل اليوم",
+            waterTitle: "مراقبة شرب الماء", waterGoalLbl: "الهدف اليومي (أكواب)", setGoal: "تحديد",
+            progress: "التقدم الحالي", remove: "- إزالة", addGlass: "+ إضافة كوب", langModalTitle: "اللغة والتفضيلات",
+            langModalDesc: "اختر لغتك المفضلة:", savePrefs: "حفظ وإغلاق",
+            bmiScoreTitle: "نتيجة مؤشر كتلة الجسم واحتياجات السعرات"
+        }
+        // Fallback for other languages to English or localized keys handled dynamically
+    };
+
+    function t(key) {
+        let pack = translations[currentLang] || translations['en'];
+        return pack[key] || translations['en'][key] || key;
+    }
+
+    function applyLanguageTranslations() {
+        document.getElementById('appTitle').textContent = t('title');
+        document.getElementById('lblAge').textContent = t('age');
+        document.getElementById('lblGender').textContent = t('gender');
+        document.getElementById('optMale').textContent = t('male');
+        document.getElementById('optFemale').textContent = t('female');
+        document.getElementById('optOther').textContent = t('other');
+        document.getElementById('lblHeightCm').textContent = t('heightCm');
+        document.getElementById('lblWeightKg').textContent = t('weightKg');
+        document.getElementById('lblHeightImp').textContent = t('heightImp');
+        document.getElementById('lblWeightLbs').textContent = t('weightLbs');
+        document.getElementById('lblActivity').textContent = t('activity');
+        document.getElementById('btnCalcBmi').textContent = t('calcBtn');
+        document.getElementById('lblHistoryTitle').textContent = t('historyTitle');
+        document.getElementById('lblChatTitle').textContent = t('chatTitle');
+        document.getElementById('lblChatDesc').textContent = t('chatDesc');
+        document.getElementById('chatWelcomeMsg').textContent = t('chatWelcome');
+        document.getElementById('btnSend').textContent = t('send');
+        document.getElementById('lblDailyTarget').textContent = t('dailyTarget');
+        document.getElementById('lblTotalConsumed').textContent = t('totalConsumed');
+        document.getElementById('lblMacroProtein').textContent = t('protein');
+        document.getElementById('lblMacroCarbs').textContent = t('carbs');
+        document.getElementById('lblMacroFats').textContent = t('fats');
+        document.getElementById('lblDbSectionTitle').textContent = t('dbTitle');
+        document.getElementById('lblSearchDb').textContent = t('searchDb');
+        document.getElementById('lblFoodName').textContent = t('foodName');
+        document.getElementById('lblFoodQty').textContent = t('foodQty');
+        document.getElementById('btnAddLog').textContent = t('addLog');
+        document.getElementById('lblTodayLogTitle').textContent = t('todayLog');
+        document.getElementById('lblWaterTitle').textContent = t('waterTitle');
+        document.getElementById('lblWaterGoal').textContent = t('waterGoalLbl');
+        document.getElementById('btnSetWaterGoal').textContent = t('setGoal');
+        document.getElementById('lblWaterProgress').textContent = t('progress');
+        document.getElementById('btnWaterRem').textContent = t('remove');
+        document.getElementById('btnWaterAdd').textContent = t('addGlass');
+        document.getElementById('modalLangTitle').textContent = t('langModalTitle');
+        document.getElementById('modalLangDesc').textContent = t('langModalDesc');
+        document.getElementById('btnSavePrefs').textContent = t('savePrefs');
+        document.getElementById('lblBmiScoreTitle').textContent = t('bmiScoreTitle');
+    }
+
+    function openSettingsModal() {
+        renderLanguageOptions();
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+        applyLanguageTranslations();
+    }
+
+    function renderLanguageOptions() {
+        let container = document.getElementById('languageListContainer');
+        let html = '';
+        languages.forEach(l => {
+            let isSel = currentLang === l.code ? 'selected' : '';
+            html += `
+                <div class="lang-card ${isSel}" onclick="selectLanguage('${l.code}')">
+                    <div>
+                        <strong style="display:block; font-size:0.95rem; color:#fff;">${l.name}</strong>
+                        <span style="font-size:0.8rem; color:#cbd5e1;">${l.native}</span>
+                    </div>
+                    <input type="radio" name="langRadio" ${currentLang === l.code ? 'checked' : ''} style="width:auto; margin:0; accent-color:var(--accent-gold);">
+                </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function selectLanguage(code) {
+        currentLang = code;
+        localStorage.setItem('hp_lang', currentLang);
+        renderLanguageOptions();
+        applyLanguageTranslations();
+    }
+
+    function resetAppData() {
+        if(confirm("Are you sure you want to reset all data and preferences to default?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
 
     const foodDatabase = [
         { name: 'Chicken Biryani', cals: 500, p: 25, c: 60, f: 18, unit: '1 plate' },
@@ -650,6 +904,7 @@
 
     function setUnit(unit) {
         currentUnit = unit;
+        localStorage.setItem('hp_unit', currentUnit);
         document.getElementById('metricBtn').classList.toggle('active', unit === 'metric');
         document.getElementById('imperialBtn').classList.toggle('active', unit === 'imperial');
         
@@ -979,6 +1234,9 @@
         renderWater();
     }
 
+    // Initial load setup
+    setUnit(currentUnit);
+    applyLanguageTranslations();
     renderHistory();
     renderCalories();
     renderChat();
